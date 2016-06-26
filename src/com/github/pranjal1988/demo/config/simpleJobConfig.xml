@@ -1,0 +1,64 @@
+<beans:beans xmlns="http://www.springframework.org/schema/batch"
+	xmlns:beans="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="
+           http://www.springframework.org/schema/beans
+           http://www.springframework.org/schema/beans/spring-beans.xsd
+           http://www.springframework.org/schema/batch
+           http://www.springframework.org/schema/batch/spring-batch-2.2.xsd">
+
+	<beans:import resource="basicSpringBatchConfig.xml" />
+
+	<job id="parentJob" abstract="true" >
+		<listeners>
+			<listener ref="simpleJobListener" />
+		</listeners>
+	</job>
+
+	<step id="parentStep" abstract="true">
+		<listeners>
+			<listener ref="simpleStepListener" />
+		</listeners>
+	</step>
+	<beans:bean id="simpleJobListener" class="com.github.pranjal1988.demo.listeners.SimpleJobListener" lazy-init="true"/>
+	<beans:bean id="simpleStepListener"
+		class="com.github.pranjal1988.demo.listeners.SimpleStepListener" lazy-init="true"/>
+
+	<job id="ioSampleJob" job-repository="inMemoryJobRepository">
+		<step id="step1" next="step2" parent="parentStep">
+			<tasklet>
+				<chunk reader="fileReader" processor="sampleProcessor" writer="fileWriter" commit-interval="2"/>
+			</tasklet>
+		</step>
+		<step id="step2">
+			<tasklet ref="completionMessageTasket" />
+		</step>
+	</job>
+
+	<beans:bean id="fileReader" class="org.springframework.batch.item.file.FlatFileItemReader" lazy-init="true">
+		<beans:property name="resource" value="file:d:\\input.txt" />
+		<beans:property name="lineMapper">
+			<beans:bean
+				class="org.springframework.batch.item.file.mapping.PassThroughLineMapper" lazy-init="true"/>
+		</beans:property>
+	</beans:bean>
+
+	<beans:bean id="sampleProcessor" class="com.github.pranjal1988.demo.processors.StockProcessor" lazy-init="true"/>
+	
+	<beans:bean id="fileWriter" class="org.springframework.batch.item.file.FlatFileItemWriter" lazy-init="true">
+		<beans:property name="resource" value="file:d:\\output.txt"/>
+		<beans:property name="lineAggregator">
+			<beans:bean class="org.springframework.batch.item.file.transform.DelimitedLineAggregator" lazy-init="true">
+				<beans:property name="delimiter" value="-"/>
+				<beans:property name="fieldExtractor">
+					<beans:bean class="org.springframework.batch.item.file.transform.BeanWrapperFieldExtractor" lazy-init="true">
+						<beans:property name="names" value="stockName,stockPrice,currency"/>
+					</beans:bean>
+				</beans:property>
+			</beans:bean>
+		</beans:property>
+	</beans:bean>
+
+	<beans:bean id="completionMessageTasket" class="com.github.pranjal1988.demo.tasklets.MessageTasklet" lazy-init="true">
+		<beans:property name="message" value="Message to indicate completion of process through tasklet call !" />
+	</beans:bean>
+</beans:beans>
