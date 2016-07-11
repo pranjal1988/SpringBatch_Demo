@@ -23,7 +23,7 @@
 	<beans:bean id="simpleStepListener"
 		class="com.github.pranjal1988.demo.listeners.SimpleStepListener" lazy-init="true"/>
 
-	<job id="ioSampleJob" job-repository="inMemoryJobRepository">
+	<job id="ioSampleJob" job-repository="dbJobRepository" restartable="true">
 		<step id="step1" next="step2" parent="parentStep">
 			<tasklet>
 				<chunk reader="fileReader" processor="sampleProcessor" writer="fileWriter" commit-interval="2"/>
@@ -34,6 +34,39 @@
 		</step>
 	</job>
 
+	<job id="dbRepoSampleJob" job-repository="dbJobRepository"  restartable="true">
+		<step id="mainStep1" next="endStep2" parent="parentStep">
+			<tasklet>
+				<chunk reader="bigFileReader" writer="bigFileWriter" commit-interval="100"/>
+			</tasklet>
+		</step>
+		<step id="endStep2">
+			<tasklet ref="completionMessageTasket" />
+		</step>
+	</job>
+
+	<beans:bean id="bigFileReader" class="org.springframework.batch.item.file.FlatFileItemReader" lazy-init="true">
+		<beans:property name="resource" value="file:d:\\BigInput.txt" />
+		<beans:property name="lineMapper">
+			<beans:bean
+				class="org.springframework.batch.item.file.mapping.PassThroughLineMapper" lazy-init="true"/>
+		</beans:property>
+	</beans:bean>
+
+	
+	<beans:bean id="bigFileWriter" class="org.springframework.batch.item.file.FlatFileItemWriter" lazy-init="true">
+		<beans:property name="resource" value="file:d:\\BigOutput.txt"/>
+		<beans:property name="lineAggregator">
+			<beans:bean class="org.springframework.batch.item.file.transform.DelimitedLineAggregator" lazy-init="true">
+				<beans:property name="delimiter" value="-"/>
+				<beans:property name="fieldExtractor">
+					<beans:bean class="org.springframework.batch.item.file.transform.PassThroughFieldExtractor" lazy-init="true">
+					</beans:bean>
+				</beans:property>
+			</beans:bean>
+		</beans:property>
+	</beans:bean>
+	
 	<beans:bean id="fileReader" class="org.springframework.batch.item.file.FlatFileItemReader" lazy-init="true">
 		<beans:property name="resource" value="file:d:\\input.txt" />
 		<beans:property name="lineMapper">

@@ -2,19 +2,27 @@ package com.github.pranjal1988.demo.listeners;
 
 import java.util.List;
 
+import org.springframework.batch.core.BatchStatus;
 import org.springframework.batch.core.ExitStatus;
 import org.springframework.batch.core.ItemProcessListener;
 import org.springframework.batch.core.ItemReadListener;
 import org.springframework.batch.core.ItemWriteListener;
 import org.springframework.batch.core.StepExecution;
 import org.springframework.batch.core.StepExecutionListener;
+import org.springframework.batch.item.ExecutionContext;
 
 import com.github.pranjal1988.demo.Model.Stock;
 
 public class SimpleStepListener implements StepExecutionListener , ItemReadListener<String> , ItemWriteListener<Stock> , ItemProcessListener<String, Stock> {
 
+	private int readCounter = 0;
+	private ExecutionContext context;
+	private StepExecution exec;
+	
 	@Override
 	public void beforeStep(StepExecution stepExecution) {
+		exec = stepExecution;
+		context = stepExecution.getExecutionContext();
 		System.out.println("In Before Step callback !");
 	}
 
@@ -61,7 +69,15 @@ public class SimpleStepListener implements StepExecutionListener , ItemReadListe
 
 	@Override
 	public void afterRead(String item) {
-		System.out.println("Read following item : " + item);
+		readCounter++;
+		if(readCounter % 500 == 0){
+			System.out.println("Read item : " + readCounter);
+		}
+		if(readCounter == 1059){
+			this.exec.setExitStatus(ExitStatus.FAILED);
+			exec.setStatus(BatchStatus.FAILED);
+			exec.setTerminateOnly();
+		}
 	}
 
 	@Override

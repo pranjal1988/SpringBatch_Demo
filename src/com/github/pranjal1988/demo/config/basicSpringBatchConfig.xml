@@ -1,14 +1,17 @@
 <beans:beans xmlns="http://www.springframework.org/schema/batch"
      xmlns:beans="http://www.springframework.org/schema/beans"
      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+     xmlns:jdbc="http://www.springframework.org/schema/jdbc" 
      xsi:schemaLocation="
            http://www.springframework.org/schema/beans
            http://www.springframework.org/schema/beans/spring-beans.xsd
            http://www.springframework.org/schema/batch
-           http://www.springframework.org/schema/batch/spring-batch-2.2.xsd">
+           http://www.springframework.org/schema/batch/spring-batch-2.2.xsd
+		   http://www.springframework.org/schema/jdbc 
+		   http://www.springframework.org/schema/jdbc/spring-jdbc-3.2.xsd">
 
 	<beans:bean id="syncExecJobLauncher" class="org.springframework.batch.core.launch.support.SimpleJobLauncher" lazy-init="true">
-		<beans:property name="jobRepository" ref="inMemoryJobRepository"/>
+		<beans:property name="jobRepository" ref="dbJobRepository"/>
 		<!--  defaults to org.springframework.core.task.SyncTaskExecutor -->
 	</beans:bean>
 	
@@ -31,16 +34,22 @@
 		<beans:property name="databaseType" value="mysql" />
 	</beans:bean>
 
-	<!-- <beans:bean id="dataSource"
+	<beans:bean id="dataSource"
 		class="org.springframework.jdbc.datasource.DriverManagerDataSource" lazy-init="true">
 		<beans:property name="driverClassName" value="com.mysql.jdbc.Driver" />
-		<beans:property name="url" value="jdbc:mysql://localhost:3306/test" />
+		<beans:property name="url" value="jdbc:mysql://localhost:3306/springbatchdemo" />
 		<beans:property name="username" value="root" />
-		<beans:property name="password" value="" />
-	</beans:bean> -->
+		<beans:property name="password" value="root" />
+	</beans:bean>
 
-	<beans:bean id="dataSource" class="com.github.pranjal1988.demo.Dummy"/>
+	<!-- create job-meta tables automatically -->
+	<!-- <jdbc:initialize-database data-source="dataSource">
+		<jdbc:script location="org/springframework/batch/core/schema-drop-mysql.sql" />
+		<jdbc:script location="org/springframework/batch/core/schema-mysql.sql" />
+	</jdbc:initialize-database> -->
+
+	<!-- <beans:bean id="dataSource" class="com.github.pranjal1988.demo.Dummy"/> -->
 
 	<beans:bean id="transactionManager" class="org.springframework.batch.support.transaction.ResourcelessTransactionManager" lazy-init="true"/>
-
+	
 </beans:beans>
